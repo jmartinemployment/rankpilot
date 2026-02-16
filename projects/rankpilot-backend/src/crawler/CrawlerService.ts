@@ -23,8 +23,12 @@ export class CrawlerService {
     logger.info('Starting crawl', { url: siteUrl, maxPages: opts.maxPages });
 
     this.browser = await chromium.launch({
+      channel: 'chromium',
       headless: true,
-      args: ['--disable-blink-features=AutomationControlled'],
+      args: [
+        '--disable-blink-features=AutomationControlled',
+        '--no-sandbox',
+      ],
     });
 
     try {
@@ -107,6 +111,13 @@ export class CrawlerService {
       });
 
       const httpStatus = response?.status() ?? 0;
+      const finalUrl = page.url();
+
+      // Detect bot protection / CAPTCHA pages
+      if (finalUrl.includes('sgcaptcha') || finalUrl.includes('captcha') || finalUrl.includes('challenge')) {
+        logger.warn('Bot protection detected, skipping page', { url, redirectedTo: finalUrl });
+        return null;
+      }
 
       // Wait for any dynamic content
       await page.waitForTimeout(1000);
