@@ -164,6 +164,60 @@ npx prisma migrate dev  # Run migrations
 - **Alert** — Score drops, page errors, SSL warnings
 - **Report** — Generated PDF report records
 
+## Deployment
+
+| Service | URL | Platform |
+|---|---|---|
+| Backend API | `https://rankpilot-backend.onrender.com` | Render (auto-deploy from GitHub `main`) |
+| Frontend | `geekatyourspot.com/rankpilot/` | WordPress (Angular Elements via FTP) |
+| Database | Supabase PostgreSQL (`nvcfdbhmsdansrsxhwwv`) | Supabase (us-west-2) |
+| GitHub | `github.com/jmartinemployment/rankpilot` | GitHub |
+
+### Render Service Details
+
+- **Service ID:** `srv-d69l4t75r7bs73fajaf0`
+- **Build command:** `cd projects/rankpilot-backend && npm install && npx prisma generate && npm run build`
+- **Start command:** `cd projects/rankpilot-backend && node dist/server.js`
+- **Outbound IP:** `74.220.50.254`
+- **Env vars:** DATABASE_URL (pooler, us-west-2), DIRECT_URL, ANTHROPIC_API_KEY, CORS_ORIGIN, PLAYWRIGHT_BROWSERS_PATH
+
+### Supabase Connection Strings
+
+- **Pooler (for Render/production):** `postgresql://postgres.nvcfdbhmsdansrsxhwwv:PASSWORD@aws-0-us-west-2.pooler.supabase.com:6543/postgres?pgbouncer=true`
+- **Direct (for local dev/migrations):** `postgresql://postgres:PASSWORD@db.nvcfdbhmsdansrsxhwwv.supabase.co:5432/postgres`
+- Region must be `us-west-2` for pooler (other regions return "Tenant or user not found")
+
+### WordPress Integration
+
+- Page slug: `rankpilot` (template: "RankPilot SEO Dashboard")
+- PHP template: `page-rankpilot.php`
+- JS/CSS loaded via `wp_enqueue_script_module()` / `wp_enqueue_style()` in `functions.php`
+- Assets path: `assets/geek-elements/rankpilot/` (main.js + styles.css)
+- FTP upload via curl with `--ssl-reqd --insecure` (SiteGround cert mismatch)
+
+### SiteGround Bot Protection
+
+- SiteGround's AI Anti-Bot WAF blocks data center IPs by default
+- Render's outbound IP (`74.220.50.254`) was whitelisted by SiteGround support (Velina Hristova, Feb 16 2026)
+- Contact SiteGround support via Help Desk > Other > AI Crawlers Setup if IP changes
+- `robots.txt` was changed from `Disallow: /` to `Allow: /` (was blocking all bots including Google)
+
+## Key Decisions
+
+- **Playwright over HTTP fetch for crawling:** Needed for JS-rendered pages and accurate DOM analysis
+- **`channel: 'chromium'` launch:** Uses full Chrome binary in headless mode (harder for bot detection than headless shell)
+- **CAPTCHA detection:** Crawler detects `sgcaptcha`/`captcha`/`challenge` in URLs and skips those pages
+- **`navigator.webdriver` override:** Removes headless detection signal via `addInitScript()`
+- **Build deps in `dependencies`:** typescript, @types/*, prisma moved from devDependencies because Render's production `npm install` skips devDependencies
+- **`postinstall` script:** Runs `npx playwright install chromium` to download browser binary on Render
+- **`PLAYWRIGHT_BROWSERS_PATH` env var:** Set to project directory so browser persists from build to runtime on Render
+
+## Known Issues
+
+- Render free tier has limited memory — crawls of large sites (50+ pages) take 5-10 minutes
+- PDF report generation via Puppeteer may OOM on free tier for very large reports
+- SiteGround IP whitelist may need updating if Render's outbound IP changes
+
 ## Session Notes
 
 **February 16, 2026 (Session 1):**
@@ -181,4 +235,20 @@ npx prisma migrate dev  # Run migrations
 - Fixed: outputHashing set to "none" for predictable filenames
 - Both library and elements app build successfully
 - Backend compiles with zero TypeScript errors
-- Next: Set up Supabase database, run Prisma migrations, create .env, test end-to-end crawl
+
+**February 16, 2026 (Session 2):**
+- Full production deployment completed
+- Deployed backend to Render.com (auto-deploy from GitHub main)
+- Deployed Angular Elements bundle to WordPress via FTPS
+- Created WordPress page template and updated functions.php
+- Fixed: Render build failure (moved build deps from devDependencies to dependencies)
+- Fixed: Supabase pooler region (us-west-2, not us-east-1)
+- Fixed: Playwright browser install on Render (postinstall script + PLAYWRIGHT_BROWSERS_PATH)
+- Fixed: SiteGround bot protection blocking Render IP (whitelisted by SiteGround support)
+- Fixed: robots.txt was `Disallow: /` blocking all bots — changed to `Allow: /`
+- Added: Setup view for dashboard (URL input form for creating sites without pre-existing siteId)
+- Added: CAPTCHA detection in crawler (skips bot challenge pages)
+- Added: Chrome stealth measures (realistic UA, webdriver override, AutomationControlled disabled)
+- Added: Debug fetch-test endpoint for diagnosing connectivity issues
+- Successful end-to-end crawl of geekatyourspot.com: 52 pages, score 88/100, 0 errors
+- Next: Remove debug endpoint, improve dashboard UX, add loading states, mobile responsive testing

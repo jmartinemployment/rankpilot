@@ -8,7 +8,7 @@ import { CrawlProgressComponent } from '../crawl-progress/crawl-progress.compone
 import { FixQueueComponent } from '../fix-queue/fix-queue.component';
 import type { Site, CrawlPage, Crawl } from '../../models/site.model';
 
-type ViewMode = 'overview' | 'page-detail' | 'crawling';
+type ViewMode = 'setup' | 'overview' | 'page-detail' | 'crawling';
 
 @Component({
   selector: 'rp-site-dashboard',
@@ -19,23 +19,25 @@ type ViewMode = 'overview' | 'page-detail' | 'crawling';
     <div class="dashboard">
       <header class="dash-header">
         <div>
-          <h1>{{ site()?.name ?? 'RankPilot' }}</h1>
+          <h1>{{ site()?.name ?? 'RankPilot SEO Auditor' }}</h1>
           @if (site(); as s) {
             <p class="site-url">{{ s.url }}</p>
           }
         </div>
-        <div class="actions">
-          @if (view() !== 'crawling') {
-            <button class="btn-primary" (click)="startCrawl()" [disabled]="!site()">
-              Run SEO Audit
-            </button>
-          }
-          @if (latestCrawlId()) {
-            <a class="btn-secondary" [href]="reportUrl()" target="_blank" rel="noopener">
-              Download PDF Report
-            </a>
-          }
-        </div>
+        @if (view() !== 'setup') {
+          <div class="actions">
+            @if (view() !== 'crawling') {
+              <button class="btn-primary" (click)="startCrawl()" [disabled]="!site()">
+                Run SEO Audit
+              </button>
+            }
+            @if (latestCrawlId()) {
+              <a class="btn-secondary" [href]="reportUrl()" target="_blank" rel="noopener">
+                Download PDF Report
+              </a>
+            }
+          </div>
+        }
       </header>
 
       @if (error()) {
@@ -43,6 +45,45 @@ type ViewMode = 'overview' | 'page-detail' | 'crawling';
       }
 
       @switch (view()) {
+        @case ('setup') {
+          <div class="setup-card">
+            <h2>Audit any website for SEO issues</h2>
+            <p class="setup-desc">Enter a URL below and we'll crawl the site, score every page, and generate AI-powered fixes.</p>
+            <div class="setup-form">
+              <div class="field">
+                <label for="site-url">Website URL</label>
+                <input
+                  id="site-url"
+                  type="url"
+                  placeholder="https://example.com"
+                  [value]="setupUrl()"
+                  (input)="setupUrl.set($any($event.target).value)"
+                />
+              </div>
+              <div class="field">
+                <label for="site-name">Site Name</label>
+                <input
+                  id="site-name"
+                  type="text"
+                  placeholder="My Website"
+                  [value]="setupName()"
+                  (input)="setupName.set($any($event.target).value)"
+                />
+              </div>
+              <button
+                class="btn-primary btn-lg"
+                (click)="createAndCrawl()"
+                [disabled]="!setupUrl() || isCreating()"
+              >
+                @if (isCreating()) {
+                  Creating...
+                } @else {
+                  Start SEO Audit
+                }
+              </button>
+            </div>
+          </div>
+        }
         @case ('crawling') {
           <rp-crawl-progress
             [crawlId]="activeCrawlId()!"
@@ -113,6 +154,15 @@ type ViewMode = 'overview' | 'page-detail' | 'crawling';
     .trend-down { color: #ef4444; font-weight: 600; }
     .trend-flat { color: #6b7280; }
     .content-grid { display: grid; grid-template-columns: 1fr 320px; gap: 24px; }
+    .setup-card { max-width: 520px; margin: 40px auto; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 40px; text-align: center; }
+    .setup-card h2 { font-size: 22px; margin: 0 0 8px; }
+    .setup-desc { color: #6b7280; margin: 0 0 24px; line-height: 1.5; }
+    .setup-form { display: flex; flex-direction: column; gap: 16px; }
+    .field { display: flex; flex-direction: column; text-align: left; }
+    .field label { font-size: 13px; font-weight: 600; margin-bottom: 4px; color: #374151; }
+    .field input { padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 15px; outline: none; }
+    .field input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15); }
+    .btn-lg { padding: 12px 24px; font-size: 16px; margin-top: 8px; }
     .empty-state { text-align: center; padding: 60px 24px; }
     .empty-state h2 { font-size: 20px; margin-bottom: 8px; }
     .empty-state p { color: #6b7280; }
@@ -130,7 +180,7 @@ export class SiteDashboardComponent implements OnInit {
   readonly site = signal<Site | null>(null);
   readonly pages = signal<CrawlPage[]>([]);
   readonly selectedPage = signal<CrawlPage | null>(null);
-  readonly view = signal<ViewMode>('overview');
+  readonly view = signal<ViewMode>('setup');
   readonly error = signal('');
   readonly activeCrawlId = signal<string | null>(null);
   readonly currentPage = signal(1);
@@ -139,9 +189,14 @@ export class SiteDashboardComponent implements OnInit {
   readonly previousScore = signal<number | null>(null);
   readonly latestCrawlId = signal<string | null>(null);
 
+  readonly setupUrl = signal('');
+  readonly setupName = signal('');
+  readonly isCreating = signal(false);
+
   async ngOnInit(): Promise<void> {
     if (this.siteId()) {
       await this.loadSite();
+      this.view.set('overview');
     }
   }
 
@@ -186,6 +241,28 @@ export class SiteDashboardComponent implements OnInit {
       this.view.set('page-detail');
     } catch {
       this.error.set('Failed to load page details.');
+    }
+  }
+
+  async createAndCrawl(): Promise<void> {
+    const url = this.setupUrl().trim();
+    if (!url) return;
+
+    this.isCreating.set(true);
+    this.error.set('');
+
+    try {
+      const name = this.setupName().trim() || new URL(url).hostname;
+      const site = await this.api.createSite(url, name);
+      this.site.set(site);
+
+      const crawl = await this.api.triggerCrawl(site.id);
+      this.activeCrawlId.set(crawl.id);
+      this.view.set('crawling');
+    } catch {
+      this.error.set('Failed to create site. Check the URL and try again.');
+    } finally {
+      this.isCreating.set(false);
     }
   }
 
