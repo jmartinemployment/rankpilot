@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/server.ts",
+    "postinstall": "npx playwright install chromium --with-deps || true",
     "build": "tsc",
     "start": "node dist/server.js",
     "lint": "eslint src/",
