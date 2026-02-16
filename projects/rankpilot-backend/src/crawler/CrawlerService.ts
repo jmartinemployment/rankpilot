@@ -22,7 +22,10 @@ export class CrawlerService {
 
     logger.info('Starting crawl', { url: siteUrl, maxPages: opts.maxPages });
 
-    this.browser = await chromium.launch({ headless: true });
+    this.browser = await chromium.launch({
+      headless: true,
+      args: ['--disable-blink-features=AutomationControlled'],
+    });
 
     try {
       const technicalChecks = await runTechnicalChecks(baseUrl);
@@ -77,11 +80,17 @@ export class CrawlerService {
     if (!this.browser) return null;
 
     const context = await this.browser.newContext({
-      userAgent: 'RankPilot SEO Crawler/1.0 (+https://geekatyourspot.com/rankpilot)',
+      userAgent: 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
       viewport: { width: 1280, height: 720 },
     });
 
     const page: Page = await context.newPage();
+
+    // Remove headless detection signals
+    await page.addInitScript(() => {
+      Object.defineProperty(navigator, 'webdriver', { get: () => false });
+    });
+
     const redirectChain: string[] = [];
 
     // Track redirects
