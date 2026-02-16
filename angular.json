@@ -6,5 +6,99 @@
   },
   "newProjectRoot": "projects",
   "projects": {
+    "rankpilot-library": {
+      "projectType": "library",
+      "root": "projects/rankpilot-library",
+      "sourceRoot": "projects/rankpilot-library/src",
+      "prefix": "lib",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:ng-packagr",
+          "configurations": {
+            "production": {
+              "tsConfig": "projects/rankpilot-library/tsconfig.lib.prod.json"
+            },
+            "development": {
+              "tsConfig": "projects/rankpilot-library/tsconfig.lib.json"
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "test": {
+          "builder": "@angular/build:unit-test",
+          "options": {
+            "tsConfig": "projects/rankpilot-library/tsconfig.spec.json"
+          }
+        }
+      }
+    },
+    "rankpilot-elements": {
+      "projectType": "application",
+      "schematics": {
+        "@schematics/angular:component": {
+          "style": "scss"
+        }
+      },
+      "root": "projects/rankpilot-elements",
+      "sourceRoot": "projects/rankpilot-elements/src",
+      "prefix": "app",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:application",
+          "options": {
+            "browser": "projects/rankpilot-elements/src/main.ts",
+            "tsConfig": "projects/rankpilot-elements/tsconfig.app.json",
+            "inlineStyleLanguage": "scss",
+            "assets": [
+              {
+                "glob": "**/*",
+                "input": "projects/rankpilot-elements/public"
+              }
+            ],
+            "styles": [
+              "projects/rankpilot-elements/src/styles.scss"
+            ]
+          },
+          "configurations": {
+            "production": {
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "500kB",
+                  "maximumError": "1MB"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "4kB",
+                  "maximumError": "8kB"
+                }
+              ],
+              "outputHashing": "none"
+            },
+            "development": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "serve": {
+          "builder": "@angular/build:dev-server",
+          "configurations": {
+            "production": {
+              "buildTarget": "rankpilot-elements:build:production"
+            },
+            "development": {
+              "buildTarget": "rankpilot-elements:build:development"
+            }
+          },
+          "defaultConfiguration": "development"
+        },
+        "test": {
+          "builder": "@angular/build:unit-test"
+        }
+      }
+    }
   }
 }

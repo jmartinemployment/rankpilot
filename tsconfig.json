@@ -11,6 +11,11 @@
     "skipLibCheck": true,
     "isolatedModules": true,
     "experimentalDecorators": true,
+    "paths": {
+      "rankpilot-library": [
+        "./projects/rankpilot-library/src/public-api.ts"
+      ]
+    },
     "importHelpers": true,
     "target": "ES2022",
     "module": "preserve"
@@ -21,5 +26,19 @@
     "strictInputAccessModifiers": true,
     "strictTemplates": true
   },
-  "files": []
+  "files": [],
+  "references": [
+    {
+      "path": "./projects/rankpilot-library/tsconfig.lib.json"
+    },
+    {
+      "path": "./projects/rankpilot-library/tsconfig.spec.json"
+    },
+    {
+      "path": "./projects/rankpilot-elements/tsconfig.app.json"
+    },
+    {
+      "path": "./projects/rankpilot-elements/tsconfig.spec.json"
+    }
+  ]
 }

@@ -1,0 +1,129 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum CrawlStatus {
+  PENDING
+  RUNNING
+  COMPLETE
+  FAILED
+}
+
+enum AlertType {
+  SCORE_DROP
+  PAGE_ERROR
+  SSL_EXPIRY
+  PERFORMANCE
+}
+
+enum AlertSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+model Site {
+  id              String   @id @default(cuid())
+  url             String
+  name            String
+  crawlDepthLimit Int      @default(50)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  crawls  Crawl[]
+  alerts  Alert[]
+  reports Report[]
+
+  @@map("sites")
+}
+
+model Crawl {
+  id            String      @id @default(cuid())
+  siteId        String
+  status        CrawlStatus @default(PENDING)
+  startedAt     DateTime?
+  completedAt   DateTime?
+  pageCount     Int         @default(0)
+  overallScore  Float?
+  previousScore Float?
+  errorMessage  String?
+  createdAt     DateTime    @default(now())
+
+  site  Site        @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  pages CrawlPage[]
+
+  @@index([siteId])
+  @@map("crawls")
+}
+
+model CrawlPage {
+  id              String  @id @default(cuid())
+  crawlId         String
+  url             String
+  httpStatus      Int?
+  title           String?
+  metaDescription String?
+  h1              String?
+  h2s             Json?
+  wordCount       Int     @default(0)
+  imageCount      Int     @default(0)
+  imagesWithoutAlt Int    @default(0)
+  internalLinks   Int     @default(0)
+  externalLinks   Int     @default(0)
+  canonicalUrl    String?
+  ogTags          Json?
+  structuredData  Json?
+  hasViewportMeta Boolean @default(false)
+  isIndexable     Boolean @default(true)
+  redirectChain   Json?
+
+  seoScore Float?
+  issues   Json?
+  fixes    Json?
+
+  lcpMs    Float?
+  clsScore Float?
+
+  createdAt DateTime @default(now())
+
+  crawl Crawl @relation(fields: [crawlId], references: [id], onDelete: Cascade)
+
+  @@index([crawlId])
+  @@map("crawl_pages")
+}
+
+model Alert {
+  id        String        @id @default(cuid())
+  siteId    String
+  type      AlertType
+  severity  AlertSeverity
+  message   String
+  isRead    Boolean       @default(false)
+  createdAt DateTime      @default(now())
+
+  site Site @relation(fields: [siteId], references: [id], onDelete: Cascade)
+
+  @@index([siteId])
+  @@map("alerts")
+}
+
+model Report {
+  id          String   @id @default(cuid())
+  siteId      String
+  crawlId     String?
+  pdfUrl      String?
+  generatedAt DateTime @default(now())
+
+  site Site @relation(fields: [siteId], references: [id], onDelete: Cascade)
+
+  @@index([siteId])
+  @@map("reports")
+}
