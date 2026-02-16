@@ -12,7 +12,7 @@ import type {
 @Injectable({ providedIn: 'root' })
 export class RankPilotApiService {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = 'http://localhost:3100/api';
+  private readonly baseUrl = 'https://rankpilot-backend.onrender.com/api';
 
   async createSite(url: string, name: string, crawlDepthLimit?: number): Promise<Site> {
     const res = await firstValueFrom(

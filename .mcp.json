@@ -7,6 +7,18 @@
     "puppeteer": {
       "command": "npx",
       "args": ["-y", "@modelcontextprotocol/server-puppeteer"]
+    },
+    "ftp": {
+      "command": "node",
+      "args": ["/Users/jam/development/mcp-server-ftp/build/index.js"],
+      "env": {
+        "FTP_HOST": "ftp.geekatyourspot.com",
+        "FTP_PORT": "21",
+        "FTP_USER": "jeffm@geekatyourspot.com",
+        "FTP_PASSWORD": "101318&ElM",
+        "FTP_SECURE": "true",
+        "FTP_BASE_PATH": "geekatyourspot.com/public_html/wp-content/themes/geek-at-your-spot"
+      }
     }
   }
 }
