@@ -23,8 +23,26 @@ export class CrawlOrchestrator {
     });
 
     try {
+      // Debounced progress callback — updates pagesDiscovered at most every 3s
+      let lastProgressUpdate = 0;
+      const onProgress = async (pagesDiscovered: number): Promise<void> => {
+        const now = Date.now();
+        if (now - lastProgressUpdate < 3000) return;
+        lastProgressUpdate = now;
+        await prisma.crawl.update({
+          where: { id: crawlId },
+          data: { pagesDiscovered },
+        });
+      };
+
       // Run the crawler
-      const result = await this.crawler.crawl(siteUrl, { maxPages });
+      const result = await this.crawler.crawl(siteUrl, { maxPages, onProgress });
+
+      // Final discovery count update
+      await prisma.crawl.update({
+        where: { id: crawlId },
+        data: { pagesDiscovered: result.pages.length },
+      });
 
       // Score each page and generate fixes — update pageCount incrementally
       const pageScores: PageScore[] = [];

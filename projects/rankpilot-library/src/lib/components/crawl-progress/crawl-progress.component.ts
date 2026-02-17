@@ -39,7 +39,9 @@ import { RankPilotApiService } from '../../services/rankpilot-api.service';
             </span>
             <div class="step-content">
               <span class="step-label">Discovering pages</span>
-              @if (pageCount() > 0) {
+              @if (pagesDiscovered() > 0 && pagesAnalyzed() === 0) {
+                <span class="step-detail">{{ pagesDiscovered() }} pages discovered...</span>
+              } @else if (pageCount() > 0) {
                 <span class="step-detail">{{ pageCount() }} pages found</span>
               }
             </div>
@@ -102,6 +104,7 @@ export class CrawlProgressComponent implements OnInit, OnDestroy {
 
   readonly status = signal<CrawlStatus>('PENDING');
   readonly pageCount = signal(0);
+  readonly pagesDiscovered = signal(0);
   readonly pagesAnalyzed = signal(0);
   readonly elapsedSeconds = signal(0);
 
@@ -159,6 +162,7 @@ export class CrawlProgressComponent implements OnInit, OnDestroy {
       const crawl = await this.api.getCrawl(this.crawlId());
       this.status.set(crawl.status);
       this.pageCount.set(crawl.pageCount);
+      this.pagesDiscovered.set(crawl.pagesDiscovered ?? 0);
       this.pagesAnalyzed.set(crawl._count?.pages ?? 0);
 
       if (crawl.status === 'COMPLETE' || crawl.status === 'FAILED') {

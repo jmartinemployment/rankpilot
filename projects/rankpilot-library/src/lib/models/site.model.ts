@@ -26,6 +26,7 @@ export interface Crawl {
   startedAt: string | null;
   completedAt: string | null;
   pageCount: number;
+  pagesDiscovered: number;
   overallScore: number | null;
   previousScore: number | null;
   errorMessage: string | null;

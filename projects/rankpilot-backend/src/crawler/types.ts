@@ -3,6 +3,7 @@ export interface CrawlOptions {
   concurrency: number;
   respectRobotsTxt: boolean;
   timeout: number;
+  onProgress?: (pagesDiscovered: number) => Promise<void>;
 }
 
 export interface PageData {

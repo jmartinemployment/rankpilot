@@ -51,8 +51,9 @@ model Crawl {
   status        CrawlStatus @default(PENDING)
   startedAt     DateTime?
   completedAt   DateTime?
-  pageCount     Int         @default(0)
-  overallScore  Float?
+  pageCount        Int         @default(0)
+  pagesDiscovered  Int         @default(0)
+  overallScore     Float?
   previousScore Float?
   errorMessage  String?
   createdAt     DateTime    @default(now())

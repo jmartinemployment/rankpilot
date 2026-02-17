@@ -47,6 +47,7 @@ export class CrawlerService {
           if (result.status === 'fulfilled' && result.value) {
             const pageData = result.value;
             pages.push(pageData);
+            await opts.onProgress?.(pages.length);
 
             // Add discovered internal links to queue (deduplicated via normalized set)
             for (const linkPath of pageData.internalLinkUrls) {

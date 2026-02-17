@@ -8,13 +8,16 @@ import { CrawlProgressComponent } from '../crawl-progress/crawl-progress.compone
 import { FixQueueComponent } from '../fix-queue/fix-queue.component';
 import type { Site, CrawlPage, Crawl } from '../../models/site.model';
 
-type ViewMode = 'setup' | 'overview' | 'page-detail' | 'crawling';
+type ViewMode = 'setup' | 'overview' | 'crawling';
 
 @Component({
   selector: 'rp-site-dashboard',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [ScoreGaugeComponent, PageListComponent, PageDetailComponent, CrawlProgressComponent, FixQueueComponent],
-  host: { style: 'display: block' },
+  host: {
+    'style': 'display: block',
+    '(document:keydown.escape)': 'closeDetail()',
+  },
   template: `
     <div class="dashboard">
       <header class="dash-header">
@@ -91,10 +94,6 @@ type ViewMode = 'setup' | 'overview' | 'page-detail' | 'crawling';
             (crawlComplete)="onCrawlComplete()"
           />
         }
-        @case ('page-detail') {
-          <button class="btn-back" (click)="view.set('overview')">&larr; Back to overview</button>
-          <rp-page-detail [page]="selectedPage()" />
-        }
         @case ('overview') {
           @if (latestCrawlId()) {
             <div class="score-section">
@@ -135,6 +134,16 @@ type ViewMode = 'setup' | 'overview' | 'page-detail' | 'crawling';
           }
         }
       }
+
+      @if (selectedPage()) {
+        <div class="modal-backdrop" (click)="closeDetail()" (keydown.escape)="closeDetail()"></div>
+        <div class="modal-panel" role="dialog" aria-modal="true" aria-label="Page detail">
+          <button class="modal-close" (click)="closeDetail()" aria-label="Close">&times;</button>
+          <div class="modal-body">
+            <rp-page-detail [page]="selectedPage()" />
+          </div>
+        </div>
+      }
     </div>
   `,
   styles: `
@@ -148,8 +157,12 @@ type ViewMode = 'setup' | 'overview' | 'page-detail' | 'crawling';
     .btn-primary:hover { background: #1d4ed8; }
     .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
     .btn-secondary { padding: 10px 20px; background: white; color: #374151; border: 1px solid #d1d5db; border-radius: 6px; font-weight: 500; cursor: pointer; text-decoration: none; font-size: 14px; }
-    .btn-back { padding: 6px 12px; background: none; border: 1px solid #d1d5db; border-radius: 6px; cursor: pointer; margin-bottom: 16px; }
     .error-banner { background: #fee2e2; color: #991b1b; padding: 12px; border-radius: 6px; margin-bottom: 16px; }
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; }
+    .modal-panel { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 12px; z-index: 1001; width: 90vw; max-width: 800px; max-height: 85vh; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+    .modal-close { position: absolute; top: 12px; right: 16px; background: none; border: none; font-size: 28px; cursor: pointer; color: #6b7280; line-height: 1; padding: 4px 8px; z-index: 1; }
+    .modal-close:hover { color: #1f2937; }
+    .modal-body { overflow-y: auto; padding: 24px; flex: 1; }
     .score-section { display: flex; align-items: center; gap: 24px; margin-bottom: 24px; }
     .trend-up { color: #22c55e; font-weight: 600; }
     .trend-down { color: #ef4444; font-weight: 600; }
@@ -241,10 +254,13 @@ export class SiteDashboardComponent implements OnInit {
     try {
       const page = await this.api.getCrawlPage(crawlId, pageId);
       this.selectedPage.set(page);
-      this.view.set('page-detail');
     } catch {
       this.error.set('Failed to load page details.');
     }
+  }
+
+  closeDetail(): void {
+    this.selectedPage.set(null);
   }
 
   async createAndCrawl(): Promise<void> {
