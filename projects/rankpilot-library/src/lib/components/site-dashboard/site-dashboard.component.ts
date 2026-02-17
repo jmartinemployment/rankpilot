@@ -87,6 +87,7 @@ type ViewMode = 'setup' | 'overview' | 'page-detail' | 'crawling';
         @case ('crawling') {
           <rp-crawl-progress
             [crawlId]="activeCrawlId()!"
+            [siteUrl]="site()?.url ?? ''"
             (crawlComplete)="onCrawlComplete()"
           />
         }
@@ -138,7 +139,7 @@ type ViewMode = 'setup' | 'overview' | 'page-detail' | 'crawling';
   `,
   styles: `
     :host { display: block; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #1f2937; }
-    .dashboard { max-width: 1200px; margin: 0 auto; padding: 24px; }
+    .dashboard { max-width: 1200px; margin: 0 auto; padding: 24px; min-height: calc(100vh - 10rem); }
     .dash-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; }
     .dash-header h1 { margin: 0; font-size: 24px; }
     .site-url { color: #6b7280; font-size: 14px; margin: 4px 0 0; }
@@ -202,7 +203,9 @@ export class SiteDashboardComponent implements OnInit {
 
   private async loadSite(): Promise<void> {
     try {
-      const site = await this.api.getSite(this.siteId());
+      const id = this.site()?.id ?? this.siteId();
+      if (!id) return;
+      const site = await this.api.getSite(id);
       this.site.set(site);
 
       const latestCrawl = site.crawls?.at(0);
@@ -281,8 +284,8 @@ export class SiteDashboardComponent implements OnInit {
   }
 
   async onCrawlComplete(): Promise<void> {
-    this.view.set('overview');
     await this.loadSite();
+    this.view.set('overview');
   }
 
   reportUrl(): string {

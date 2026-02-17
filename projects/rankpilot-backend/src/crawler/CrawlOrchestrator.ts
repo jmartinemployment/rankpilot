@@ -26,8 +26,9 @@ export class CrawlOrchestrator {
       // Run the crawler
       const result = await this.crawler.crawl(siteUrl, { maxPages });
 
-      // Score each page and generate fixes
+      // Score each page and generate fixes — update pageCount incrementally
       const pageScores: PageScore[] = [];
+      let processedCount = 0;
 
       for (const pageData of result.pages) {
         const score = this.scorer.scorePage(pageData);
@@ -59,6 +60,12 @@ export class CrawlOrchestrator {
             issues: score.issues as object[],
             fixes: fixes as object[],
           },
+        });
+
+        processedCount++;
+        await prisma.crawl.update({
+          where: { id: crawlId },
+          data: { pageCount: processedCount },
         });
       }
 

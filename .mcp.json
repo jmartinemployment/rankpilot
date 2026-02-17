@@ -19,6 +19,30 @@
         "FTP_SECURE": "true",
         "FTP_BASE_PATH": "geekatyourspot.com/public_html/wp-content/themes/geek-at-your-spot"
       }
+    },
+    "supabase": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@supabase/mcp-server-supabase@latest",
+        "--read-only",
+        "--project-ref=nvcfdbhmsdansrsxhwwv"
+      ],
+      "env": {
+        "SUPABASE_ACCESS_TOKEN": "YOUR_SUPABASE_PAT"
+      }
+    },
+    "sequential-thinking": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"]
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/Users/jam/development/RankPilot-Workspace"
+      ]
     }
   }
 }
