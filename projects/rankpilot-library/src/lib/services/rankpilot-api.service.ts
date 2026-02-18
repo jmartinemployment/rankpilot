@@ -2,6 +2,8 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import type {
+  AnalyticsComparison,
+  AnalyticsSnapshot,
   ApiResponse,
   Crawl,
   CrawlPage,
@@ -76,5 +78,51 @@ export class RankPilotApiService {
 
   getReportUrl(crawlId: string): string {
     return `${this.baseUrl}/crawls/${crawlId}/report`;
+  }
+
+  async uploadAnalytics(
+    siteId: string,
+    file: File,
+    label: 'BEFORE' | 'AFTER',
+    crawlId?: string,
+  ): Promise<AnalyticsSnapshot> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('label', label);
+    if (crawlId) formData.append('crawlId', crawlId);
+
+    const res = await firstValueFrom(
+      this.http.post<ApiResponse<AnalyticsSnapshot>>(
+        `${this.baseUrl}/sites/${siteId}/analytics`,
+        formData,
+      ),
+    );
+    return res.data;
+  }
+
+  async getAnalyticsSnapshots(siteId: string): Promise<AnalyticsSnapshot[]> {
+    const res = await firstValueFrom(
+      this.http.get<ApiResponse<AnalyticsSnapshot[]>>(
+        `${this.baseUrl}/sites/${siteId}/analytics`,
+      ),
+    );
+    return res.data;
+  }
+
+  async getAnalyticsComparison(siteId: string): Promise<AnalyticsComparison> {
+    const res = await firstValueFrom(
+      this.http.get<ApiResponse<AnalyticsComparison>>(
+        `${this.baseUrl}/sites/${siteId}/analytics/comparison`,
+      ),
+    );
+    return res.data;
+  }
+
+  async deleteAnalyticsSnapshot(siteId: string, snapshotId: string): Promise<void> {
+    await firstValueFrom(
+      this.http.delete<ApiResponse<{ deleted: boolean }>>(
+        `${this.baseUrl}/sites/${siteId}/analytics/${snapshotId}`,
+      ),
+    );
   }
 }

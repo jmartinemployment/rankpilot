@@ -8,6 +8,7 @@ import healthRouter from './routes/health.js';
 import sitesRouter from './routes/sites.js';
 import crawlsRouter from './routes/crawls.js';
 import reportsRouter from './routes/reports.js';
+import analyticsRouter from './routes/analytics.js';
 
 const env = loadEnvironment();
 const app = express();
@@ -19,6 +20,7 @@ app.use(healthRouter);
 app.use(sitesRouter);
 app.use(crawlsRouter);
 app.use(reportsRouter);
+app.use(analyticsRouter);
 
 app.use(errorHandler);
 

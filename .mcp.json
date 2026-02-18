@@ -4,10 +4,6 @@
       "command": "npx",
       "args": ["@playwright/mcp@latest"]
     },
-    "puppeteer": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-puppeteer"]
-    },
     "ftp": {
       "command": "node",
       "args": ["/Users/jam/development/mcp-server-ftp/build/index.js"],

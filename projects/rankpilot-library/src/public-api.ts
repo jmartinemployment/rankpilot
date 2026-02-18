@@ -14,4 +14,5 @@ export * from './lib/components/crawl-progress/crawl-progress.component';
 export * from './lib/components/page-list/page-list.component';
 export * from './lib/components/page-detail/page-detail.component';
 export * from './lib/components/fix-queue/fix-queue.component';
+export * from './lib/components/analytics-comparison/analytics-comparison.component';
 export * from './lib/components/site-dashboard/site-dashboard.component';

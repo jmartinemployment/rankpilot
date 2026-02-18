@@ -85,3 +85,40 @@ export interface ApiResponse<T> {
   data: T;
   error?: { message: string; code?: string };
 }
+
+export interface AnalyticsRow {
+  path: string;
+  views: number;
+  activeUsers: number;
+  avgEngagementTime: number;
+  eventCount: number;
+}
+
+export interface AnalyticsSnapshot {
+  id: string;
+  siteId: string;
+  crawlId: string | null;
+  label: 'BEFORE' | 'AFTER';
+  dateRange: string | null;
+  rowCount: number;
+  createdAt: string;
+}
+
+export interface AnalyticsComparisonRow {
+  path: string;
+  beforeViews: number;
+  afterViews: number;
+  viewsChange: number;
+  viewsChangePct: number;
+  beforeUsers: number;
+  afterUsers: number;
+  usersChange: number;
+  beforeEngagement: number;
+  afterEngagement: number;
+}
+
+export interface AnalyticsComparison {
+  before: AnalyticsSnapshot;
+  after: AnalyticsSnapshot;
+  rows: AnalyticsComparisonRow[];
+}

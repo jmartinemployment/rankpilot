@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, input, signal, computed } from '@angular/core';
+import { Component, ChangeDetectionStrategy, input, computed, linkedSignal } from '@angular/core';
 import type { CrawlPage, SeoFix } from '../../models/site.model';
 
 interface QueuedFix extends SeoFix {
@@ -6,6 +6,8 @@ interface QueuedFix extends SeoFix {
   pageId: string;
   done: boolean;
 }
+
+const PRIORITY_ORDER: Record<string, number> = { high: 0, medium: 1, low: 2 };
 
 @Component({
   selector: 'rp-fix-queue',
@@ -57,27 +59,24 @@ interface QueuedFix extends SeoFix {
 export class FixQueueComponent {
   readonly pages = input<CrawlPage[]>([]);
 
-  readonly fixes = signal<QueuedFix[]>([]);
-
-  readonly sortedFixes = computed(() => {
-    // Build queue from pages on first access
-    if (this.fixes().length === 0 && this.pages().length > 0) {
+  readonly fixes = linkedSignal<CrawlPage[], QueuedFix[]>({
+    source: this.pages,
+    computation: (pages) => {
       const queue: QueuedFix[] = [];
-      for (const page of this.pages()) {
+      for (const page of pages) {
         for (const fix of page.fixes ?? []) {
           queue.push({ ...fix, pageUrl: page.url, pageId: page.id, done: false });
         }
       }
-      // Sort: high first, then medium, then low
-      const priorityOrder = { high: 0, medium: 1, low: 2 };
-      queue.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
-      this.fixes.set(queue);
-    }
-    return this.fixes();
+      queue.sort((a, b) => (PRIORITY_ORDER[a.priority] ?? 2) - (PRIORITY_ORDER[b.priority] ?? 2));
+      return queue;
+    },
   });
 
+  readonly sortedFixes = this.fixes.asReadonly();
+
   readonly remainingCount = computed(() =>
-    this.sortedFixes().filter((f) => !f.done).length,
+    this.fixes().filter((f) => !f.done).length,
   );
 
   toggleFix(index: number): void {

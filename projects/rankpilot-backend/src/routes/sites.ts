@@ -25,9 +25,22 @@ router.post('/api/sites', async (req, res) => {
     }
 
     const prisma = getPrisma();
+
+    // Dedup: return existing site if URL already registered
+    const normalizedUrl = parsed.data.url.replace(/\/+$/, '').toLowerCase();
+    const existing = await prisma.site.findFirst({
+      where: { url: { equals: normalizedUrl, mode: 'insensitive' } },
+    });
+
+    if (existing) {
+      logger.info('Site already exists, returning existing', { siteId: existing.id, url: existing.url });
+      sendSuccess(res, existing, 200);
+      return;
+    }
+
     const site = await prisma.site.create({
       data: {
-        url: parsed.data.url,
+        url: normalizedUrl,
         name: parsed.data.name,
         crawlDepthLimit: parsed.data.crawlDepthLimit ?? 50,
       },

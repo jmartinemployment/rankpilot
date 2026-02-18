@@ -1,7 +1,7 @@
 import puppeteer from 'puppeteer';
 import { getPrisma } from '../config/database.js';
 import { createLogger } from '../config/logger.js';
-import { toErrorMessage } from '../utils/errors.js';
+
 import type { CrawlPage } from '../generated/prisma/client.js';
 
 const logger = createLogger('report-service');

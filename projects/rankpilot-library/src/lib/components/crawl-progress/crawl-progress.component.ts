@@ -67,7 +67,7 @@ import { RankPilotApiService } from '../../services/rankpilot-api.service';
   `,
   styles: `
     :host { display: block; }
-    .crawl-progress { padding: 28px; border-radius: 12px; background: #f9fafb; border: 1px solid #e5e7eb; max-width: 520px; margin: 40px auto; }
+    .crawl-progress { padding: 28px; border-radius: 12px; background: #f9fafb; border: 1px solid #e5e7eb; max-width: 520px; margin: 40px auto; min-height: 280px; display: flex; flex-direction: column; justify-content: center; }
     .status-indicator { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
     .spinner { width: 22px; height: 22px; border: 3px solid #e5e7eb; border-top-color: #3b82f6; border-radius: 50%; animation: spin 0.8s linear infinite; flex-shrink: 0; }
     @keyframes spin { to { transform: rotate(360deg); } }

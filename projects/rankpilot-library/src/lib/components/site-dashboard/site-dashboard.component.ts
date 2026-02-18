@@ -6,6 +6,7 @@ import { PageListComponent } from '../page-list/page-list.component';
 import { PageDetailComponent } from '../page-detail/page-detail.component';
 import { CrawlProgressComponent } from '../crawl-progress/crawl-progress.component';
 import { FixQueueComponent } from '../fix-queue/fix-queue.component';
+import { AnalyticsComparisonComponent } from '../analytics-comparison/analytics-comparison.component';
 import type { Site, CrawlPage, Crawl } from '../../models/site.model';
 
 type ViewMode = 'setup' | 'overview' | 'crawling';
@@ -13,7 +14,7 @@ type ViewMode = 'setup' | 'overview' | 'crawling';
 @Component({
   selector: 'rp-site-dashboard',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ScoreGaugeComponent, PageListComponent, PageDetailComponent, CrawlProgressComponent, FixQueueComponent],
+  imports: [ScoreGaugeComponent, PageListComponent, PageDetailComponent, CrawlProgressComponent, FixQueueComponent, AnalyticsComparisonComponent],
   host: {
     'style': 'display: block',
     '(document:keydown.escape)': 'closeDetail()',
@@ -29,11 +30,14 @@ type ViewMode = 'setup' | 'overview' | 'crawling';
         </div>
         @if (view() !== 'setup') {
           <div class="actions">
-            @if (view() !== 'crawling') {
-              <button class="btn-primary" (click)="startCrawl()" [disabled]="!site()">
-                Run SEO Audit
-              </button>
-            }
+            <button
+              class="btn-primary"
+              (click)="startCrawl()"
+              [disabled]="!site() || view() === 'crawling'"
+              [style.visibility]="view() === 'crawling' ? 'hidden' : 'visible'"
+            >
+              Run SEO Audit
+            </button>
             @if (latestCrawlId()) {
               <a class="btn-secondary" [href]="reportUrl()" target="_blank" rel="noopener">
                 Download PDF Report
@@ -126,6 +130,8 @@ type ViewMode = 'setup' | 'overview' | 'crawling';
                 <rp-fix-queue [pages]="pages()" />
               </aside>
             </div>
+
+            <rp-analytics-comparison [siteId]="site()!.id" />
           } @else {
             <div class="empty-state">
               <h2>No audits yet</h2>

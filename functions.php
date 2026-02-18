@@ -1,7 +1,6 @@
 <?php
 
 // Theme Setup - MUST be on after_setup_theme hook
-function geek_theme_setup()
 {
   // Enable featured images (post thumbnails)
   add_theme_support('post-thumbnails');
