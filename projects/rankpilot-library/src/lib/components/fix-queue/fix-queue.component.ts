@@ -1,40 +1,37 @@
-import { Component, ChangeDetectionStrategy, input, computed, linkedSignal } from '@angular/core';
-import type { CrawlPage, SeoFix } from '../../models/site.model';
+import { Component, ChangeDetectionStrategy, input, computed } from '@angular/core';
+import type { CrawlPage, SeoIssue } from '../../models/site.model';
 
-interface QueuedFix extends SeoFix {
+interface PageIssue extends SeoIssue {
   pageUrl: string;
   pageId: string;
-  done: boolean;
 }
 
-const PRIORITY_ORDER: Record<string, number> = { high: 0, medium: 1, low: 2 };
+const SEVERITY_ORDER: Record<string, number> = { critical: 0, warning: 1, info: 2 };
 
 @Component({
   selector: 'rp-fix-queue',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { style: 'display: block' },
   template: `
-    <div class="fix-queue">
+    <div class="issue-queue">
       <div class="queue-header">
-        <h3>Fix Queue</h3>
-        <span class="counter">{{ remainingCount() }} remaining</span>
+        <h3>Issues</h3>
+        <span class="counter">{{ sortedIssues().length }} found</span>
       </div>
 
-      @for (fix of sortedFixes(); track $index) {
-        <div class="fix-item" [class.done]="fix.done">
-          <label class="checkbox-label">
-            <input type="checkbox" [checked]="fix.done" (change)="toggleFix($index)" />
-            <div class="fix-content">
-              <span class="priority-dot" [class]="'dot-' + fix.priority"></span>
-              <div>
-                <div class="fix-title">{{ fix.issue }}</div>
-                <div class="fix-page">{{ shortenUrl(fix.pageUrl) }}</div>
-              </div>
+      @for (issue of sortedIssues(); track $index) {
+        <div class="issue-item">
+          <span class="severity-dot" [class]="'dot-' + issue.severity"></span>
+          <div class="issue-content">
+            <div class="issue-message">{{ issue.message }}</div>
+            <div class="issue-meta">
+              <span class="issue-page">{{ shortenUrl(issue.pageUrl) }}</span>
+              <span class="issue-category">{{ issue.category }}</span>
             </div>
-          </label>
+          </div>
         </div>
       } @empty {
-        <div class="empty">No fixes needed. Great job!</div>
+        <div class="empty">No issues found. Great job!</div>
       }
     </div>
   `,
@@ -43,47 +40,35 @@ const PRIORITY_ORDER: Record<string, number> = { high: 0, medium: 1, low: 2 };
     .queue-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
     .queue-header h3 { margin: 0; font-size: 16px; }
     .counter { font-size: 13px; color: #6b7280; }
-    .fix-item { padding: 10px; border: 1px solid #e5e7eb; border-radius: 6px; margin-bottom: 6px; }
-    .fix-item.done { opacity: 0.5; }
-    .checkbox-label { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; }
-    .fix-content { display: flex; align-items: flex-start; gap: 8px; }
-    .fix-title { font-size: 14px; font-weight: 500; }
-    .fix-page { font-size: 12px; color: #6b7280; }
-    .priority-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
-    .dot-high { background: #ef4444; }
-    .dot-medium { background: #f59e0b; }
-    .dot-low { background: #3b82f6; }
+    .issue-item { display: flex; align-items: flex-start; gap: 8px; padding: 10px; border: 1px solid #e5e7eb; border-radius: 6px; margin-bottom: 6px; }
+    .severity-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+    .dot-critical { background: #ef4444; }
+    .dot-warning { background: #f59e0b; }
+    .dot-info { background: #3b82f6; }
+    .issue-content { flex: 1; min-width: 0; }
+    .issue-message { font-size: 14px; font-weight: 500; }
+    .issue-meta { display: flex; gap: 8px; margin-top: 4px; }
+    .issue-page { font-size: 12px; color: #6b7280; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .issue-category { font-size: 11px; color: #9ca3af; background: #f3f4f6; padding: 1px 6px; border-radius: 4px; white-space: nowrap; }
     .empty { text-align: center; color: #6b7280; padding: 24px; }
   `,
 })
 export class FixQueueComponent {
   readonly pages = input<CrawlPage[]>([]);
 
-  readonly fixes = linkedSignal<CrawlPage[], QueuedFix[]>({
-    source: this.pages,
-    computation: (pages) => {
-      const queue: QueuedFix[] = [];
-      for (const page of pages) {
-        for (const fix of page.fixes ?? []) {
-          queue.push({ ...fix, pageUrl: page.url, pageId: page.id, done: false });
-        }
+  readonly sortedIssues = computed<PageIssue[]>(() => {
+    const queue: PageIssue[] = [];
+    for (const page of this.pages()) {
+      for (const issue of page.issues ?? []) {
+        queue.push({ ...issue, pageUrl: page.url, pageId: page.id });
       }
-      queue.sort((a, b) => (PRIORITY_ORDER[a.priority] ?? 2) - (PRIORITY_ORDER[b.priority] ?? 2));
-      return queue;
-    },
-  });
-
-  readonly sortedFixes = this.fixes.asReadonly();
-
-  readonly remainingCount = computed(() =>
-    this.fixes().filter((f) => !f.done).length,
-  );
-
-  toggleFix(index: number): void {
-    this.fixes.update((fixes) =>
-      fixes.map((f, i) => (i === index ? { ...f, done: !f.done } : f)),
+    }
+    queue.sort((a, b) =>
+      (SEVERITY_ORDER[a.severity] ?? 2) - (SEVERITY_ORDER[b.severity] ?? 2)
+      || b.impact - a.impact,
     );
-  }
+    return queue;
+  });
 
   shortenUrl(url: string): string {
     try {

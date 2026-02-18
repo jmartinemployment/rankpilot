@@ -1,6 +1,7 @@
 <?php
 
 // Theme Setup - MUST be on after_setup_theme hook
+function geek_theme_setup()
 {
   // Enable featured images (post thumbnails)
   add_theme_support('post-thumbnails');
@@ -163,7 +164,7 @@ function geek_enqueue_modules()
       'rankpilot-elements',
       get_template_directory_uri() . '/assets/geek-elements/rankpilot/main.js',
       array(),
-      '0.1.0'
+      '0.3.0'
     );
   }
 }
