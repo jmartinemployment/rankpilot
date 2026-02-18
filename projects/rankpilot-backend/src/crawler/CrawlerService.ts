@@ -7,6 +7,16 @@ import { DEFAULT_CRAWL_OPTIONS } from './types.js';
 
 const logger = createLogger('crawler');
 
+const EXCLUDED_PATTERNS = [
+  /\/category\//,
+  /\/tag\//,
+  /[?&]cat=/,
+  /\/page\/\d+/,
+  /\/author\//,
+  /\/feed\/?$/,
+  /\/wp-json\//,
+];
+
 export class CrawlerService {
   private browser: Browser | null = null;
 
@@ -53,7 +63,8 @@ export class CrawlerService {
             for (const linkPath of pageData.internalLinkUrls) {
               const fullUrl = new URL(linkPath, baseUrl.origin).href;
               const normalized = this.normalizeUrl(fullUrl);
-              if (!seen.has(normalized) && pages.length + queue.length < opts.maxPages) {
+              const isExcluded = EXCLUDED_PATTERNS.some(p => p.exec(normalized) !== null);
+              if (!isExcluded && !seen.has(normalized) && pages.length + queue.length < opts.maxPages) {
                 seen.add(normalized);
                 queue.push(fullUrl);
               }

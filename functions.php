@@ -164,7 +164,7 @@ function geek_enqueue_modules()
       'rankpilot-elements',
       get_template_directory_uri() . '/assets/geek-elements/rankpilot/main.js',
       array(),
-      '0.3.0'
+      '0.7.0'
     );
   }
 }

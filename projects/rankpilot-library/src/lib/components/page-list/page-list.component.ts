@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, input, output, computed } from '@angular/core';
+import { Component, ChangeDetectionStrategy, input, output } from '@angular/core';
 import type { CrawlPage } from '../../models/site.model';
 
 @Component({
@@ -14,12 +14,11 @@ import type { CrawlPage } from '../../models/site.model';
             <th class="text-center">Score</th>
             <th class="text-center">Status</th>
             <th class="text-center">Words</th>
-            <th class="text-center">Issues</th>
           </tr>
         </thead>
         <tbody>
           @for (page of pages(); track page.id) {
-            <tr class="page-row" (click)="pageSelected.emit(page.id)" (keydown.enter)="pageSelected.emit(page.id)" tabindex="0" role="button">
+            <tr class="page-row">
               <td class="url-cell" [title]="page.url">{{ shortenUrl(page.url) }}</td>
               <td class="text-center">
                 <span class="score-badge" [class]="scoreClass(page.seoScore)">
@@ -28,10 +27,21 @@ import type { CrawlPage } from '../../models/site.model';
               </td>
               <td class="text-center">{{ page.httpStatus ?? '-' }}</td>
               <td class="text-center">{{ page.wordCount }}</td>
-              <td class="text-center">{{ page.issues?.length ?? 0 }}</td>
             </tr>
+            @if (page.issues?.length) {
+              <tr class="issues-row">
+                <td colspan="4">
+                  @for (issue of page.issues; track $index) {
+                    <div class="issue-item">
+                      <span class="severity-dot" [class]="'dot-' + issue.severity"></span>
+                      <span class="issue-msg">{{ issue.message }}</span>
+                    </div>
+                  }
+                </td>
+              </tr>
+            }
           } @empty {
-            <tr><td colspan="5" class="empty">No pages found.</td></tr>
+            <tr><td colspan="4" class="empty">No pages found.</td></tr>
           }
         </tbody>
       </table>
@@ -51,13 +61,19 @@ import type { CrawlPage } from '../../models/site.model';
     th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #e5e7eb; font-size: 14px; }
     th { background: #f9fafb; font-weight: 600; font-size: 13px; }
     .text-center { text-align: center; }
-    .page-row { cursor: pointer; }
-    .page-row:hover { background: #f3f4f6; }
+    .page-row td { border-bottom: none; }
     .url-cell { max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .score-badge { padding: 2px 8px; border-radius: 12px; font-weight: 600; font-size: 13px; }
     .score-good { background: #dcfce7; color: #166534; }
     .score-warning { background: #fef3c7; color: #92400e; }
     .score-bad { background: #fee2e2; color: #991b1b; }
+    .issues-row td { padding: 2px 12px 10px 12px; border-bottom: 1px solid #e5e7eb; }
+    .issue-item { display: flex; align-items: flex-start; gap: 6px; padding: 2px 0; }
+    .severity-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 4px; flex-shrink: 0; }
+    .dot-critical { background: #ef4444; }
+    .dot-warning { background: #f59e0b; }
+    .dot-info { background: #3b82f6; }
+    .issue-msg { font-size: 13px; color: #6b7280; }
     .empty { text-align: center; color: #6b7280; padding: 24px; }
     .pagination { display: flex; justify-content: center; align-items: center; gap: 16px; padding: 16px; }
     .pagination button { padding: 6px 16px; border: 1px solid #d1d5db; border-radius: 6px; background: white; cursor: pointer; }

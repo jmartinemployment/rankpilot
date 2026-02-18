@@ -115,21 +115,14 @@ type ViewMode = 'setup' | 'overview' | 'crawling';
               }
             </div>
 
-            <div class="content-grid">
-              <div class="main-content">
-                <rp-page-list
-                  [pages]="pages()"
-                  [currentPage]="currentPage()"
-                  [totalPages]="totalPages()"
-                  (pageSelected)="selectPage($event)"
-                  (prevPage)="loadPages(currentPage() - 1)"
-                  (nextPage)="loadPages(currentPage() + 1)"
-                />
-              </div>
-              <aside class="sidebar">
-                <rp-fix-queue [pages]="pages()" />
-              </aside>
-            </div>
+            <rp-page-list
+              [pages]="pages()"
+              [currentPage]="currentPage()"
+              [totalPages]="totalPages()"
+              (pageSelected)="selectPage($event)"
+              (prevPage)="loadPages(currentPage() - 1)"
+              (nextPage)="loadPages(currentPage() + 1)"
+            />
 
             <rp-analytics-comparison [siteId]="site()!.id" />
           } @else {
@@ -173,7 +166,6 @@ type ViewMode = 'setup' | 'overview' | 'crawling';
     .trend-up { color: #22c55e; font-weight: 600; }
     .trend-down { color: #ef4444; font-weight: 600; }
     .trend-flat { color: #6b7280; }
-    .content-grid { display: grid; grid-template-columns: 1fr 320px; gap: 24px; }
     .setup-card { max-width: 520px; margin: 40px auto; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 40px; text-align: center; }
     .setup-card h2 { font-size: 22px; margin: 0 0 8px; }
     .setup-desc { color: #6b7280; margin: 0 0 24px; line-height: 1.5; }
@@ -187,7 +179,6 @@ type ViewMode = 'setup' | 'overview' | 'crawling';
     .empty-state h2 { font-size: 20px; margin-bottom: 8px; }
     .empty-state p { color: #6b7280; }
     @media (max-width: 768px) {
-      .content-grid { grid-template-columns: 1fr; }
       .dash-header { flex-direction: column; gap: 12px; }
     }
   `,
