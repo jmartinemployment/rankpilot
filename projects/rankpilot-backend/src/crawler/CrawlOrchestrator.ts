@@ -52,7 +52,9 @@ export class CrawlOrchestrator {
         const score = this.scorer.scorePage(pageData);
         pageScores.push(score);
 
-        const fixes = await this.fixGenerator.generateFixes(pageData, score.issues);
+        // AI fix generation disabled — re-enable when Anthropic API credits are available
+        // const fixes = await this.fixGenerator.generateFixes(pageData, score.issues);
+        const fixes: string[] = [];
 
         await prisma.crawlPage.create({
           data: {

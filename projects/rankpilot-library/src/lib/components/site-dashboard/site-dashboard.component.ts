@@ -217,6 +217,22 @@ export class SiteDashboardComponent implements OnInit {
     if (this.siteId()) {
       await this.loadSite();
       this.view.set('overview');
+    } else {
+      // No siteId provided — try to load the first existing site
+      await this.loadFirstSite();
+    }
+  }
+
+  private async loadFirstSite(): Promise<void> {
+    try {
+      const sites = await this.api.getSites();
+      if (sites.length > 0) {
+        this.site.set(sites[0]);
+        await this.loadSite();
+        this.view.set('overview');
+      }
+    } catch {
+      // No sites yet — stay on setup view
     }
   }
 

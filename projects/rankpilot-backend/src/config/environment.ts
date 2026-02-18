@@ -5,7 +5,7 @@ const envSchema = z.object({
   PORT: z.coerce.number().default(3100),
   DATABASE_URL: z.string().url(),
   DIRECT_URL: z.string().url().optional(),
-  ANTHROPIC_API_KEY: z.string().min(1),
+  ANTHROPIC_API_KEY: z.string().min(1).optional(),
   CORS_ORIGIN: z.string().default('https://geekatyourspot.com'),
   CRAWL_DEPTH_DEFAULT: z.coerce.number().default(50),
   CRAWL_CONCURRENCY: z.coerce.number().default(3),
