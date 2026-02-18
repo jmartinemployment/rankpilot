@@ -17,10 +17,10 @@ app.use(cors({ origin: env.CORS_ORIGIN }));
 app.use(express.json());
 
 app.use(healthRouter);
+app.use(analyticsRouter);
 app.use(sitesRouter);
 app.use(crawlsRouter);
 app.use(reportsRouter);
-app.use(analyticsRouter);
 
 app.use(errorHandler);
 
